@@ -5,35 +5,114 @@
   <title>Sea Message</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: sans-serif; text-align: center; padding: 2rem;">
+<body style="font-family: sans-serif; text-align: center; padding: 1.5rem;">
 
-  <h1>Sea Message</h1>
+  <h1 style="margin-top:0;">Sea Message</h1>
   <p>Aponta a câmara para o quadro para ouvir o som.</p>
 
-  <button onclick="startCamera()" style="padding: 12px 20px; font-size: 16px;">
-    Ativar câmara
-  </button>
+  <div style="margin: 1rem 0;">
+    <button onclick="startCamera()" style="padding: 12px 18px; font-size: 16px;">
+      Ativar câmara
+    </button>
 
-  <br><br>
+    <button onclick="capture()" style="padding: 12px 18px; font-size: 16px; margin-left: 8px;">
+      Capturar
+    </button>
+  </div>
 
-  <video id="video" autoplay playsinline style="width:100%; max-width:400px; display:none;"></video>
+  <video id="video" autoplay playsinline style="width:100%; max-width:420px; display:none; border-radius: 10px;"></video>
+
+  <!-- Canvas “invisível” usado para tirar a foto -->
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <!-- Pré-visualização da imagem capturada -->
+  <div style="margin-top: 14px;">
+    <img id="snapshot" alt="captura" style="width:100%; max-width:420px; display:none; border-radius: 10px; border: 1px solid #eee;">
+  </div>
+
+  <div style="margin: 1rem 0;">
+    <button id="playBtn" onclick="playAudio()" disabled
+      style="padding: 12px 18px; font-size: 16px; opacity: 0.6;">
+      Ouvir áudio
+    </button>
+  </div>
+
+  <audio id="player" preload="auto"></audio>
+
+  <p id="status" style="color:#444;"></p>
 
   <script>
+    let stream;
+
     async function startCamera() {
       const video = document.getElementById('video');
-      video.style.display = 'block';
+      const status = document.getElementById('status');
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" }
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false
         });
         video.srcObject = stream;
+        video.style.display = 'block';
+        status.textContent = "Câmara ativa. Aponte para o quadro e clique em Capturar.";
       } catch (e) {
-        alert("Erro ao aceder à câmara");
+        status.textContent = "Não foi possível aceder à câmara.";
+        alert("Erro ao aceder à câmara.");
       }
+    }
+
+    function capture() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const snapshot = document.getElementById('snapshot');
+      const status = document.getElementById('status');
+      const playBtn = document.getElementById('playBtn');
+
+      if (!video.srcObject) {
+        alert("Ativa a câmara primeiro.");
+        return;
+      }
+
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+
+      if (!w || !h) {
+        status.textContent = "Aguarda 1-2 segundos e tenta novamente.";
+        return;
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+
+      // Mostrar preview
+      snapshot.src = canvas.toDataURL('image/jpeg', 0.85);
+      snapshot.style.display = 'block';
+
+      // MVP (1 quadro): após capturar, ativar botão de áudio
+      playBtn.disabled = false;
+      playBtn.style.opacity = 1;
+
+      status.textContent = "Imagem capturada. Agora clica em 'Ouvir áudio'.";
+    }
+
+    function playAudio() {
+      const player = document.getElementById('player');
+      const status = document.getElementById('status');
+
+      // ✅ Troca este caminho pelo teu ficheiro real (ver abaixo)
+      player.src = "/audio/quadro_01.mp3";
+
+      player.play()
+        .then(() => status.textContent = "A tocar áudio…")
+        .catch(() => {
+          status.textContent = "O browser bloqueou o autoplay. Tenta novamente com um toque.";
+          alert("O browser bloqueou a reprodução automática. Carrega novamente no botão.");
+        });
     }
   </script>
 
 </body>
 </html>
-``
