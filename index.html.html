@@ -6,7 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="font-family: sans-serif; text-align: center; padding: 2rem;">
+
   <h1>Sea Message</h1>
   <p>Aponta a câmara para o quadro para ouvir o som.</p>
+
+  <button onclick="startCamera()" style="padding: 12px 20px; font-size: 16px;">
+    Ativar câmara
+  </button>
+
+  <br><br>
+
+  <video id="video" autoplay playsinline style="width:100%; max-width:400px; display:none;"></video>
+
+  <script>
+    async function startCamera() {
+      const video = document.getElementById('video');
+      video.style.display = 'block';
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        video.srcObject = stream;
+      } catch (e) {
+        alert("Erro ao aceder à câmara");
+      }
+    }
+  </script>
+
 </body>
 </html>
+``
